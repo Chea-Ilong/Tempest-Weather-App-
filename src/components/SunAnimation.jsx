@@ -32,10 +32,9 @@ const SunAnimation = ({ isVisible = true }) => {
         centerY,
         outerRadius * 1.2,
       )
-      gradient.addColorStop(0, `hsla(${hue}, 100%, 65%, 0.15)`);
-      gradient.addColorStop(0.5, `hsla(${hue}, 100%, 70%, 0.05)`);
-      gradient.addColorStop(1, `hsla(${hue}, 100%, 75%, 0)`);
-
+      gradient.addColorStop(0, `hsla(${hue}, 100%, 65%, 0.15)`)
+      gradient.addColorStop(0.5, `hsla(${hue}, 100%, 70%, 0.05)`)
+      gradient.addColorStop(1, `hsla(${hue}, 100%, 75%, 0)`)
 
       ctx.fillStyle = gradient
       ctx.beginPath()
@@ -83,9 +82,24 @@ const SunAnimation = ({ isVisible = true }) => {
     }
 
     const resizeCanvas = () => {
-      const size = Math.min(canvas.parentElement.offsetWidth, canvas.parentElement.offsetHeight)
-      canvas.width = size
-      canvas.height = size
+      const parentWidth = canvas.parentElement.offsetWidth
+      const parentHeight = canvas.parentElement.offsetHeight
+      const size = Math.min(parentWidth, parentHeight)
+
+      // Set canvas dimensions with device pixel ratio for sharper rendering
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = size * dpr
+      canvas.height = size * dpr
+
+      // Scale the canvas back down with CSS
+      canvas.style.width = `${size}px`
+      canvas.style.height = `${size}px`
+
+      // Update center coordinates based on new dimensions
+      const centerX = size / 2
+      const centerY = size / 2
+      const outerRadius = Math.min(centerX, centerY) * 0.9
+      const innerRadius = outerRadius * 0.7
     }
 
     resizeCanvas()

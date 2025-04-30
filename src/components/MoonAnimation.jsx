@@ -266,6 +266,11 @@ const MoonAnimation = ({ isVisible = true }) => {
         border: "none",
         outline: "none",
         boxShadow: "none",
+        maxWidth: "100%",
+        maxHeight: "100%",
+        position: "absolute",
+        top: 0,
+        right: 0,
       }}
     />
   )
