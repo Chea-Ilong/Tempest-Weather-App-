@@ -286,6 +286,7 @@ function App() {
               </div>
 
               {/* Search Input */}
+              
               <input
                 type="text"
                 value={query}
