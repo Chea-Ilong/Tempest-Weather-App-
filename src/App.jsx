@@ -10,6 +10,7 @@ import CityCard from "./components/CityCard"
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
 
 function App() {
+  
   const [query, setQuery] = useState("")
   const [weather, setWeather] = useState(null)
   const [forecast, setForecast] = useState([])
