@@ -65,22 +65,23 @@ const SunAnimation = ({ isVisible = true }) => {
             centerY,
             outerRadius * 1.2,
           )
-          gradient.addColorStop(0, `hsla(${hue}, 100%, 65%, 0.15)`)
-          gradient.addColorStop(0.5, `hsla(${hue}, 100%, 70%, 0.05)`)
+          // Increased opacity for better Safari rendering
+          gradient.addColorStop(0, `hsla(${hue}, 100%, 65%, 0.3)`) // Increased from 0.15
+          gradient.addColorStop(0.5, `hsla(${hue}, 100%, 70%, 0.15)`) // Increased from 0.05
           gradient.addColorStop(1, `hsla(${hue}, 100%, 75%, 0)`)
 
           ctx.fillStyle = gradient
         } catch (e) {
           // Fallback for browsers that don't support gradients well
-          ctx.fillStyle = "rgba(255, 255, 200, 0.15)"
+          ctx.fillStyle = "rgba(255, 255, 200, 0.25)" // Increased opacity
         }
 
         ctx.beginPath()
         ctx.arc(centerX, centerY, outerRadius * 1.2, 0, Math.PI * 2)
         ctx.fill()
 
-        // Draw the sun body
-        ctx.fillStyle = `hsl(${hue}, 100%, 65%)`
+        // Draw the sun body with more saturated color for Safari
+        ctx.fillStyle = `hsl(${hue}, 100%, 60%)` // More saturated yellow
         ctx.beginPath()
         ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2)
         ctx.fill()
@@ -94,7 +95,7 @@ const SunAnimation = ({ isVisible = true }) => {
         const rayLength = outerRadius - innerRadius
         const rayWidth = Math.PI / 24
 
-        ctx.fillStyle = `hsl(${hue}, 100%, 75%)`
+        ctx.fillStyle = `hsl(${hue}, 100%, 70%)` // More saturated ray color
 
         for (let i = 0; i < rayCount; i++) {
           const angle = (i * 2 * Math.PI) / rayCount

@@ -87,8 +87,9 @@ const MoonAnimation = ({ isVisible = true }) => {
 
             const gradient = ctx.createRadialGradient(centerX, centerY, radius * 0.9, centerX, centerY, glowRadius)
 
-            gradient.addColorStop(0, `rgba(210, 230, 255, ${glowOpacity + glowIntensity * 0.07})`)
-            gradient.addColorStop(0.5, `rgba(180, 200, 240, ${glowOpacity * 0.5 + glowIntensity * 0.03})`)
+            // Increased opacity for better Safari rendering
+            gradient.addColorStop(0, `rgba(210, 230, 255, ${glowOpacity + glowIntensity * 0.15})`) // Increased from 0.07
+            gradient.addColorStop(0.5, `rgba(180, 200, 240, ${glowOpacity * 0.7 + glowIntensity * 0.08})`) // Increased from 0.5 and 0.03
             gradient.addColorStop(1, "rgba(150, 180, 220, 0)")
 
             ctx.fillStyle = gradient
@@ -98,7 +99,7 @@ const MoonAnimation = ({ isVisible = true }) => {
           }
         } catch (e) {
           // Fallback for browsers that don't support gradients well
-          ctx.fillStyle = "rgba(210, 230, 255, 0.2)"
+          ctx.fillStyle = "rgba(210, 230, 255, 0.3)" // Increased opacity
           ctx.beginPath()
           ctx.arc(centerX, centerY, radius * 1.2, 0, Math.PI * 2)
           ctx.fill()
@@ -112,16 +113,16 @@ const MoonAnimation = ({ isVisible = true }) => {
         try {
           const moonGradient = ctx.createRadialGradient(-radius * 0.2, -radius * 0.2, 0, 0, 0, radius)
 
-          // More realistic moon colors
-          moonGradient.addColorStop(0, "rgba(245, 245, 255, 1)")
-          moonGradient.addColorStop(0.5, "rgba(230, 230, 245, 1)")
-          moonGradient.addColorStop(0.8, "rgba(220, 220, 235, 1)")
-          moonGradient.addColorStop(1, "rgba(200, 200, 215, 1)")
+          // More realistic moon colors with better Safari rendering
+          moonGradient.addColorStop(0, "rgba(255, 255, 255, 1)") // Brighter white (was 245)
+          moonGradient.addColorStop(0.5, "rgba(240, 240, 255, 1)") // Brighter (was 230)
+          moonGradient.addColorStop(0.8, "rgba(230, 230, 245, 1)") // Brighter (was 220)
+          moonGradient.addColorStop(1, "rgba(220, 220, 235, 1)") // Brighter (was 200)
 
           ctx.fillStyle = moonGradient
         } catch (e) {
           // Fallback for browsers that don't support gradients well
-          ctx.fillStyle = "rgba(230, 230, 245, 1)"
+          ctx.fillStyle = "rgba(240, 240, 255, 1)" // Brighter fallback
         }
 
         ctx.beginPath()
@@ -170,14 +171,14 @@ const MoonAnimation = ({ isVisible = true }) => {
             // Crater shadow (outer ring)
             const craterRingGradient = ctx.createRadialGradient(craterX, craterY, 0, craterX, craterY, craterSize * 1.1)
 
-            craterRingGradient.addColorStop(0, `rgba(180, 180, 195, ${0.1 + (1 - craterDepth) * 0.2})`)
-            craterRingGradient.addColorStop(0.7, `rgba(190, 190, 205, ${0.05 + (1 - craterDepth) * 0.1})`)
+            craterRingGradient.addColorStop(0, `rgba(180, 180, 195, ${0.15 + (1 - craterDepth) * 0.25})`) // Increased opacity
+            craterRingGradient.addColorStop(0.7, `rgba(190, 190, 205, ${0.08 + (1 - craterDepth) * 0.15})`) // Increased opacity
             craterRingGradient.addColorStop(1, "rgba(200, 200, 210, 0)")
 
             ctx.fillStyle = craterRingGradient
           } catch (e) {
             // Fallback for browsers that don't support gradients well
-            ctx.fillStyle = "rgba(180, 180, 195, 0.2)"
+            ctx.fillStyle = "rgba(180, 180, 195, 0.25)" // Increased opacity
           }
 
           ctx.beginPath()
@@ -195,14 +196,15 @@ const MoonAnimation = ({ isVisible = true }) => {
               craterSize,
             )
 
-            craterGradient.addColorStop(0, `rgba(160, 160, 175, ${craterDepth})`)
-            craterGradient.addColorStop(0.7, `rgba(180, 180, 195, ${craterDepth * 0.7})`)
-            craterGradient.addColorStop(1, `rgba(200, 200, 210, ${craterDepth * 0.3})`)
+            // Increased opacity for better Safari rendering
+            craterGradient.addColorStop(0, `rgba(160, 160, 175, ${craterDepth * 1.2})`) // Increased opacity
+            craterGradient.addColorStop(0.7, `rgba(180, 180, 195, ${craterDepth * 0.9})`) // Increased opacity
+            craterGradient.addColorStop(1, `rgba(200, 200, 210, ${craterDepth * 0.4})`) // Increased opacity
 
             ctx.fillStyle = craterGradient
           } catch (e) {
             // Fallback for browsers that don't support gradients well
-            ctx.fillStyle = "rgba(160, 160, 175, 0.7)"
+            ctx.fillStyle = "rgba(160, 160, 175, 0.8)" // Increased opacity
           }
 
           ctx.beginPath()
@@ -210,7 +212,7 @@ const MoonAnimation = ({ isVisible = true }) => {
           ctx.fill()
 
           // Crater highlight (light reflection)
-          ctx.fillStyle = `rgba(255, 255, 255, ${0.1 * craterDepth})`
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.15 * craterDepth})` // Increased opacity
           ctx.beginPath()
           ctx.arc(craterX - craterSize * 0.3, craterY - craterSize * 0.3, craterSize * 0.2, 0, Math.PI * 2)
           ctx.fill()
@@ -218,9 +220,9 @@ const MoonAnimation = ({ isVisible = true }) => {
 
         // Add maria (dark patches) to the moon
         const maria = [
-          { x: -0.1, y: 0, size: 0.4, opacity: 0.1 },
-          { x: 0.2, y: 0.2, size: 0.3, opacity: 0.08 },
-          { x: -0.2, y: -0.3, size: 0.25, opacity: 0.07 },
+          { x: -0.1, y: 0, size: 0.4, opacity: 0.12 }, // Increased opacity
+          { x: 0.2, y: 0.2, size: 0.3, opacity: 0.1 }, // Increased opacity
+          { x: -0.2, y: -0.3, size: 0.25, opacity: 0.09 }, // Increased opacity
         ]
 
         maria.forEach((mare) => {
@@ -238,7 +240,7 @@ const MoonAnimation = ({ isVisible = true }) => {
             ctx.fillStyle = mareGradient
           } catch (e) {
             // Fallback for browsers that don't support gradients well
-            ctx.fillStyle = "rgba(100, 100, 120, 0.1)"
+            ctx.fillStyle = "rgba(100, 100, 120, 0.12)" // Increased opacity
           }
 
           ctx.beginPath()
@@ -249,7 +251,7 @@ const MoonAnimation = ({ isVisible = true }) => {
         ctx.restore()
 
         // Add stars in the background - more subtle
-        ctx.globalAlpha = 0.4 + Math.sin(Date.now() * 0.001) * 0.15
+        ctx.globalAlpha = 0.5 + Math.sin(Date.now() * 0.001) * 0.15 // Increased base opacity
         for (let i = 0; i < 40; i++) {
           const starSize = Math.random() * 1.2 + 0.3
           const starX = (Math.random() * canvas.width) / (window.devicePixelRatio || 1)
@@ -259,7 +261,7 @@ const MoonAnimation = ({ isVisible = true }) => {
           const distFromCenter = Math.sqrt(Math.pow(starX - centerX, 2) + Math.pow(starY - centerY, 2))
 
           if (distFromCenter > radius * 1.4) {
-            const starBrightness = 0.4 + Math.random() * 0.4
+            const starBrightness = 0.5 + Math.random() * 0.5 // Increased brightness
             const starColor = `rgba(255, 255, ${200 + Math.random() * 55}, ${starBrightness})`
 
             ctx.fillStyle = starColor
@@ -269,7 +271,7 @@ const MoonAnimation = ({ isVisible = true }) => {
 
             // Add star twinkle - more subtle
             if (Math.random() > 0.97) {
-              ctx.fillStyle = "rgba(255, 255, 255, 0.6)"
+              ctx.fillStyle = "rgba(255, 255, 255, 0.7)" // Increased opacity
               ctx.beginPath()
               ctx.arc(starX, starY, starSize * 1.3, 0, Math.PI * 2)
               ctx.fill()

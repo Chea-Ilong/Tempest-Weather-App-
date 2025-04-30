@@ -1,3 +1,26 @@
+/* Safari-specific color rendering fixes */
+@supports (-webkit-touch-callout: none) {
+  :root {
+    color-scheme: light dark;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Force Safari to use sRGB color space for consistent rendering */
+  .bg-gradient-to-br,
+  .bg-gradient-to-b,
+  .bg-gradient-to-r {
+    -webkit-color-interpolation-mode: sRGB;
+    color-interpolation-mode: sRGB;
+  }
+
+  /* Enhance contrast for translucent elements in Safari */
+  .glass,
+  .translucent-card {
+    --webkit-background-blend-mode: normal;
+    background-blend-mode: normal;
+  }
+}
+
 /* Cross-browser compatibility styles */
 html,
 body {

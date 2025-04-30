@@ -13,8 +13,8 @@ const CityCard = ({ cityWeather, unit, onRemove, onSelect, getWeatherIconUrl }) 
     <div
       className={`rounded-xl overflow-hidden shadow-lg border border-white/10 transition-all hover:translate-y-[-5px] hover:shadow-xl ${
         isDaytime()
-          ? "bg-gradient-to-br from-blue-500/20 to-indigo-600/30"
-          : "bg-gradient-to-br from-indigo-800/30 to-purple-900/40"
+          ? "bg-gradient-to-br from-blue-500/40 to-indigo-600/50" // Increased opacity for better Safari rendering
+          : "bg-gradient-to-br from-indigo-800/50 to-purple-900/60" // Increased opacity for better Safari rendering
       } backdrop-blur-md group`}
     >
       <div className="p-5 cursor-pointer" onClick={onSelect}>
@@ -63,8 +63,8 @@ const CityCard = ({ cityWeather, unit, onRemove, onSelect, getWeatherIconUrl }) 
       <div
         className={`p-3 flex justify-between items-center border-t border-white/10 ${
           isDaytime()
-            ? "bg-gradient-to-r from-blue-600/30 to-indigo-700/30"
-            : "bg-gradient-to-r from-indigo-700/30 to-purple-800/30"
+            ? "bg-gradient-to-r from-blue-600/50 to-indigo-700/50" // Increased opacity for better Safari rendering
+            : "bg-gradient-to-r from-indigo-700/50 to-purple-800/50" // Increased opacity for better Safari rendering
         }`}
       >
         <button

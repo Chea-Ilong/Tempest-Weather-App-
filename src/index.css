@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+/* Add Safari-specific color rendering fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Force Safari to use sRGB color space */
+  :root {
+    color-scheme: light dark;
+    -webkit-color-interpolation-mode: sRGB;
+    color-interpolation-mode: sRGB;
+  }
+
+  /* Enhance contrast for text elements in Safari */
+  .text-white {
+    color: rgba(255, 255, 255, 0.98) !important;
+  }
+
+  .text-blue-100 {
+    color: rgba(219, 234, 254, 0.98) !important;
+  }
+
+  /* Fix gradient rendering in Safari */
+  .bg-gradient-to-br,
+  .bg-gradient-to-r,
+  .bg-gradient-to-b {
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+  }
+}
+
 /* Add these styles to ensure full width */
 html,
 body,

@@ -10,7 +10,6 @@ import CityCard from "./components/CityCard"
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
 
 function App() {
-  
   const [query, setQuery] = useState("")
   const [weather, setWeather] = useState(null)
   const [forecast, setForecast] = useState([])
@@ -21,9 +20,14 @@ function App() {
   const [citiesWeather, setCitiesWeather] = useState([])
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [browserSupportsBackdropFilter, setBrowserSupportsBackdropFilter] = useState(true)
+  const [isSafari, setIsSafari] = useState(false)
 
-  // Check for backdrop-filter support
+  // Check for Safari browser and backdrop-filter support
   useEffect(() => {
+    // Check if the browser is Safari
+    const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+    setIsSafari(isSafariBrowser)
+
     // Check if the browser supports backdrop-filter
     const isBackdropFilterSupported = () => {
       const el = document.createElement("div")
@@ -232,13 +236,24 @@ function App() {
 
   // Get backdrop filter class based on browser support
   const getBackdropClass = (baseClass) => {
-    return browserSupportsBackdropFilter ? `${baseClass} backdrop-blur-md` : `${baseClass} bg-opacity-70`
+    if (browserSupportsBackdropFilter) {
+      // Safari needs higher opacity for colors to appear correctly
+      if (isSafari) {
+        return `${baseClass} backdrop-blur-md bg-opacity-30`
+      }
+      return `${baseClass} backdrop-blur-md bg-opacity-20`
+    } else {
+      // Higher opacity fallback for browsers without backdrop-filter
+      return `${baseClass} bg-opacity-80`
+    }
   }
 
   return (
     <div
       className={`min-h-screen w-full overflow-x-hidden bg-gradient-to-br ${
-        isDaytime() ? "from-sky-400 to-indigo-900" : "from-indigo-900 to-purple-900"
+        isDaytime()
+          ? "from-sky-500 to-indigo-900" // More saturated sky color for better Safari rendering
+          : "from-indigo-800 to-purple-900" // Adjusted night colors for better Safari rendering
       } p-2 xs:p-3 sm:p-4 md:p-6 lg:p-8 transition-colors duration-500`}
     >
       <div className="w-full mx-0 px-0 relative">
@@ -287,7 +302,7 @@ function App() {
               </div>
 
               {/* Search Input */}
-              
+
               <input
                 type="text"
                 value={query}
@@ -473,7 +488,7 @@ function App() {
               {forecast.map((day, index) => (
                 <div
                   key={index}
-                  className="bg-gradient-to-b from-blue-500/30 to-indigo-600/30 rounded-lg p-3 xs:p-4 text-center backdrop-blur-sm shadow-md border border-white/10"
+                  className="bg-gradient-to-b from-blue-500/40 to-indigo-600/40 rounded-lg p-3 xs:p-4 text-center backdrop-blur-sm shadow-md border border-white/10"
                 >
                   <p className="font-semibold text-white">{formatDate(day.dt)}</p>
                   <img
