@@ -5,6 +5,10 @@ import "./App.css"
 import SunAnimation from "./components/SunAnimation"
 import MoonAnimation from "./components/MoonAnimation"
 import CityCard from "./components/CityCard"
+import MoonPhaseDisplay from "./components/MoonPhaseDisplay"
+import ActivitySuggestions from "./components/ActivitySuggestions"
+import RadarView from "./components/RadarView"
+import AstronomicalData from "./components/AstronomicalData"
 
 // Define API key from environment variable
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
@@ -21,6 +25,9 @@ function App() {
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [browserSupportsBackdropFilter, setBrowserSupportsBackdropFilter] = useState(true)
   const [isSafari, setIsSafari] = useState(false)
+  const [moonPhase, setMoonPhase] = useState(null)
+  const [astronomicalData, setAstronomicalData] = useState(null)
+  const [showRadar, setShowRadar] = useState(true)
 
   // Check for Safari browser and backdrop-filter support
   useEffect(() => {
@@ -90,6 +97,7 @@ function App() {
 
       const weatherData = await weatherResponse.json()
       setWeather(weatherData)
+      fetchAstronomicalData(weatherData.coord.lat, weatherData.coord.lon)
 
       // Fetch 5-day forecast with API key
       const forecastResponse = await fetch(
@@ -113,6 +121,196 @@ function App() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Fetch astronomical data including moon phase
+  const fetchAstronomicalData = async (lat, lon) => {
+    if (!lat || !lon) return
+
+    try {
+      // Calculate moon phase (0-1 where 0 and 1 are new moon, 0.5 is full moon)
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = now.getMonth() + 1
+      const day = now.getDate()
+
+      // Simple moon phase calculation (approximate)
+      // Based on the fact that moon phases repeat every 29.53 days
+      const moonPhaseResponse = await fetch(`https://api.farmsense.net/v1/moonphases/?d=${day}&m=${month}&y=${year}`)
+
+      if (!moonPhaseResponse.ok) {
+        throw new Error("Failed to fetch moon phase data")
+      }
+
+      const moonPhaseData = await moonPhaseResponse.json()
+
+      // Ensure we have valid moon phase data
+      if (moonPhaseData && moonPhaseData.length > 0) {
+        setMoonPhase(moonPhaseData[0])
+
+        // Calculate golden hour (approximately 1 hour before sunset and after sunrise)
+        if (weather && weather.sys) {
+          const sunrise = new Date(weather.sys.sunrise * 1000)
+          const sunset = new Date(weather.sys.sunset * 1000)
+
+          const goldenMorningStart = new Date(sunrise.getTime() - 30 * 60 * 1000)
+          const goldenMorningEnd = new Date(sunrise.getTime() + 30 * 60 * 1000)
+
+          const goldenEveningStart = new Date(sunset.getTime() - 30 * 60 * 1000)
+          const goldenEveningEnd = new Date(sunset.getTime() + 30 * 60 * 1000)
+
+          const blueHourMorningStart = new Date(sunrise.getTime() - 60 * 60 * 1000)
+          const blueHourMorningEnd = new Date(sunrise.getTime() - 30 * 60 * 1000)
+
+          const blueHourEveningStart = new Date(sunset.getTime() + 30 * 60 * 1000)
+          const blueHourEveningEnd = new Date(sunset.getTime() + 60 * 60 * 1000)
+
+          // If the API fails, use a fallback calculation for moon phase
+          const moonIllumination = moonPhaseData[0]?.illumination || calculateMoonIllumination(now)
+          const moonPhaseName = moonPhaseData[0]?.name || getMoonPhaseName(moonIllumination)
+
+          setAstronomicalData({
+            goldenMorningStart,
+            goldenMorningEnd,
+            goldenEveningStart,
+            goldenEveningEnd,
+            blueHourMorningStart,
+            blueHourMorningEnd,
+            blueHourEveningStart,
+            blueHourEveningEnd,
+            moonIllumination: moonIllumination,
+            moonPhase: moonPhaseData[0]?.phase || 0,
+            moonName: moonPhaseName,
+          })
+        }
+      } else {
+        // Fallback if API doesn't return valid data
+        const fallbackIllumination = calculateMoonIllumination(now)
+        const fallbackPhaseName = getMoonPhaseName(fallbackIllumination)
+
+        setMoonPhase({
+          phase: 0,
+          illumination: fallbackIllumination,
+          name: fallbackPhaseName,
+        })
+
+        if (weather && weather.sys) {
+          const sunrise = new Date(weather.sys.sunrise * 1000)
+          const sunset = new Date(weather.sys.sunset * 1000)
+
+          const goldenMorningStart = new Date(sunrise.getTime() - 30 * 60 * 1000)
+          const goldenMorningEnd = new Date(sunrise.getTime() + 30 * 60 * 1000)
+
+          const goldenEveningStart = new Date(sunset.getTime() - 30 * 60 * 1000)
+          const goldenEveningEnd = new Date(sunset.getTime() + 30 * 60 * 1000)
+
+          const blueHourMorningStart = new Date(sunrise.getTime() - 60 * 60 * 1000)
+          const blueHourMorningEnd = new Date(sunrise.getTime() - 30 * 60 * 1000)
+
+          const blueHourEveningStart = new Date(sunset.getTime() + 30 * 60 * 1000)
+          const blueHourEveningEnd = new Date(sunset.getTime() + 60 * 60 * 1000)
+
+          setAstronomicalData({
+            goldenMorningStart,
+            goldenMorningEnd,
+            goldenEveningStart,
+            goldenEveningEnd,
+            blueHourMorningStart,
+            blueHourMorningEnd,
+            blueHourEveningStart,
+            blueHourEveningEnd,
+            moonIllumination: fallbackIllumination,
+            moonPhase: 0,
+            moonName: fallbackPhaseName,
+          })
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching astronomical data:", err)
+
+      // Fallback calculation if API fails
+      const now = new Date()
+      const fallbackIllumination = calculateMoonIllumination(now)
+      const fallbackPhaseName = getMoonPhaseName(fallbackIllumination)
+
+      setMoonPhase({
+        phase: 0,
+        illumination: fallbackIllumination,
+        name: fallbackPhaseName,
+      })
+
+      if (weather && weather.sys) {
+        const sunrise = new Date(weather.sys.sunrise * 1000)
+        const sunset = new Date(weather.sys.sunset * 1000)
+
+        const goldenMorningStart = new Date(sunrise.getTime() - 30 * 60 * 1000)
+        const goldenMorningEnd = new Date(sunrise.getTime() + 30 * 60 * 1000)
+
+        const goldenEveningStart = new Date(sunset.getTime() - 30 * 60 * 1000)
+        const goldenEveningEnd = new Date(sunset.getTime() + 30 * 60 * 1000)
+
+        const blueHourMorningStart = new Date(sunrise.getTime() - 60 * 60 * 1000)
+        const blueHourMorningEnd = new Date(sunrise.getTime() - 30 * 60 * 1000)
+
+        const blueHourEveningStart = new Date(sunset.getTime() + 30 * 60 * 1000)
+        const blueHourEveningEnd = new Date(sunset.getTime() + 60 * 60 * 1000)
+
+        setAstronomicalData({
+          goldenMorningStart,
+          goldenMorningEnd,
+          goldenEveningStart,
+          goldenEveningEnd,
+          blueHourMorningStart,
+          blueHourMorningEnd,
+          blueHourEveningStart,
+          blueHourEveningEnd,
+          moonIllumination: fallbackIllumination,
+          moonPhase: 0,
+          moonName: fallbackPhaseName,
+        })
+      }
+    }
+  }
+
+  // Add these helper functions for moon phase calculation fallback
+  // Simple moon illumination calculation
+  const calculateMoonIllumination = (date) => {
+    // This is a simplified calculation
+    const synodic = 29.53 // Synodic month in days
+    const d = new Date(date)
+    const year = d.getFullYear()
+    const month = d.getMonth() + 1
+    const day = d.getDate()
+
+    // Calculate days since known new moon (Jan 6, 2000)
+    const knownNewMoon = new Date(2000, 0, 6).getTime()
+    const current = new Date(year, month - 1, day).getTime()
+    const daysSinceNewMoon = (current - knownNewMoon) / (1000 * 60 * 60 * 24)
+
+    // Calculate current phase (0 to 1)
+    const phase = (daysSinceNewMoon % synodic) / synodic
+
+    // Calculate illumination (0 to 1, where 0 and 1 are new moon, 0.5 is full moon)
+    let illumination
+    if (phase <= 0.5) {
+      illumination = phase * 2 // Waxing from 0 to 1
+    } else {
+      illumination = (1 - phase) * 2 // Waning from 1 to 0
+    }
+
+    return illumination
+  }
+
+  // Get moon phase name based on illumination
+  const getMoonPhaseName = (illumination) => {
+    if (illumination <= 0.05) return "New Moon"
+    if (illumination < 0.45) return "Waxing Crescent"
+    if (illumination < 0.55) return "First Quarter"
+    if (illumination < 0.95) return "Waxing Gibbous"
+    if (illumination >= 0.95) return "Full Moon"
+    if (illumination > 0.55) return "Waning Gibbous"
+    if (illumination > 0.45) return "Last Quarter"
+    return "Waning Crescent"
   }
 
   // Fetch weather for multiple cities
@@ -344,7 +542,7 @@ function App() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                    d="M8 7h12m0 0l-4-4m4 4l-4-4m0 6H4m0 0l4 4m-4-4l4-4"
                   />
                 </svg>
                 <span>{unit === "metric" ? "°F" : "°C"}</span>
@@ -448,6 +646,84 @@ function App() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Astronomical Data Section */}
+          {weather && astronomicalData && !loading && (
+            <div
+              className={`${getBackdropClass("bg-white/20")} rounded-xl overflow-hidden shadow-lg mb-6 border border-white/20 relative`}
+            >
+              <div className="p-6 md:p-8">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white mb-4">Astronomical Data</h2>
+                    <div className="flex flex-col md:flex-row gap-6">
+                      <AstronomicalData
+                        astronomicalData={astronomicalData}
+                        sunrise={weather.sys.sunrise}
+                        sunset={weather.sys.sunset}
+                        formatTime={formatTime}
+                      />
+                      <MoonPhaseDisplay
+                        moonPhase={astronomicalData.moonPhase}
+                        illumination={astronomicalData.moonIllumination}
+                        moonName={astronomicalData.moonName}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Activity Suggestions */}
+          {weather && !loading && (
+            <div
+              className={`${getBackdropClass("bg-white/20")} rounded-xl overflow-hidden shadow-lg mb-6 border border-white/20 relative`}
+            >
+              <div className="p-6 md:p-8">
+                <h2 className="text-2xl font-bold text-white mb-4">Suggested Activities</h2>
+                <ActivitySuggestions weather={weather} unit={unit} />
+              </div>
+            </div>
+          )}
+
+          {/* Radar View */}
+          {weather && showRadar && !loading && (
+            <div
+              className={`${getBackdropClass("bg-white/20")} rounded-xl overflow-hidden shadow-lg mb-6 border border-white/20 relative`}
+            >
+              <div className="p-4 xs:p-5 sm:p-6 md:p-8">
+                <h2 className="text-2xl font-bold text-white mb-4">Radar & Satellite View</h2>
+                <RadarView lat={weather.coord.lat} lon={weather.coord.lon} apiKey={API_KEY} />
+              </div>
+            </div>
+          )}
+
+          {/* Radar View Toggle Button - moved after the radar view */}
+          {weather && !loading && (
+            <div className="flex justify-center mb-6">
+              <button
+                onClick={() => setShowRadar(!showRadar)}
+                className={`${getBackdropClass("bg-white/20")} text-white px-6 py-3 rounded-full border border-white/20 hover:bg-white/30 transition-all duration-300 flex items-center gap-2`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                  />
+                </svg>
+                {showRadar ? "Hide Radar & Satellite View" : "Show Radar & Satellite View"}
+              </button>
             </div>
           )}
 
