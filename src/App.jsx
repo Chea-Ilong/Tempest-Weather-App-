@@ -19,17 +19,35 @@ function App() {
   const [savedCities, setSavedCities] = useState([])
   const [citiesWeather, setCitiesWeather] = useState([])
   const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const [browserSupportsBackdropFilter, setBrowserSupportsBackdropFilter] = useState(true)
+
+  // Check for backdrop-filter support
+  useEffect(() => {
+    // Check if the browser supports backdrop-filter
+    const isBackdropFilterSupported = () => {
+      const el = document.createElement("div")
+      el.style.cssText = "backdrop-filter: blur(1px)"
+      return !!el.style.backdropFilter || !!el.style.webkitBackdropFilter
+    }
+
+    setBrowserSupportsBackdropFilter(isBackdropFilterSupported())
+  }, [])
 
   // Default cities to show
   const defaultCities = ["New York", "Tokyo", "London", "Sydney", "Paris"]
 
   useEffect(() => {
     // Load saved cities from localStorage on initial load
-    const saved = localStorage.getItem("savedCities")
-    if (saved) {
-      setSavedCities(JSON.parse(saved))
-    } else {
-      // Use default cities if none saved
+    try {
+      const saved = localStorage.getItem("savedCities")
+      if (saved) {
+        setSavedCities(JSON.parse(saved))
+      } else {
+        // Use default cities if none saved
+        setSavedCities(defaultCities)
+      }
+    } catch (e) {
+      console.error("Error loading saved cities:", e)
       setSavedCities(defaultCities)
     }
   }, [])
@@ -58,7 +76,7 @@ function App() {
     try {
       // Using API key from environment variable
       const weatherResponse = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=${unit}&appid=${API_KEY}`
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=${unit}&appid=${API_KEY}`,
       )
 
       if (!weatherResponse.ok) {
@@ -70,7 +88,7 @@ function App() {
 
       // Fetch 5-day forecast with API key
       const forecastResponse = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=${unit}&appid=${API_KEY}`
+        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=${unit}&appid=${API_KEY}`,
       )
 
       if (!forecastResponse.ok) {
@@ -100,9 +118,7 @@ function App() {
     }
 
     const weatherPromises = savedCities.map((city) =>
-      fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=${unit}&appid=${API_KEY}`
-      )
+      fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=${unit}&appid=${API_KEY}`)
         .then((res) => {
           if (!res.ok) throw new Error(`Failed to fetch ${city}`)
           return res.json()
@@ -110,7 +126,7 @@ function App() {
         .catch((err) => {
           console.error(`Error fetching ${city}:`, err)
           return null
-        })
+        }),
     )
 
     try {
@@ -180,7 +196,11 @@ function App() {
     if (weather && !savedCities.includes(weather.name)) {
       const updatedCities = [...savedCities, weather.name]
       setSavedCities(updatedCities)
-      localStorage.setItem("savedCities", JSON.stringify(updatedCities))
+      try {
+        localStorage.setItem("savedCities", JSON.stringify(updatedCities))
+      } catch (e) {
+        console.error("Error saving to localStorage:", e)
+      }
     }
   }
 
@@ -188,7 +208,11 @@ function App() {
   const removeSavedCity = (cityName) => {
     const updatedCities = savedCities.filter((city) => city !== cityName)
     setSavedCities(updatedCities)
-    localStorage.setItem("savedCities", JSON.stringify(updatedCities))
+    try {
+      localStorage.setItem("savedCities", JSON.stringify(updatedCities))
+    } catch (e) {
+      console.error("Error saving to localStorage:", e)
+    }
   }
 
   // Switch to a saved city
@@ -205,40 +229,47 @@ function App() {
     return currentTime > weather.sys.sunrise && currentTime < weather.sys.sunset
   }
 
+  // Get backdrop filter class based on browser support
+  const getBackdropClass = (baseClass) => {
+    return browserSupportsBackdropFilter ? `${baseClass} backdrop-blur-md` : `${baseClass} bg-opacity-70`
+  }
+
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br ${
+      className={`min-h-screen w-full overflow-x-hidden bg-gradient-to-br ${
         isDaytime() ? "from-sky-400 to-indigo-900" : "from-indigo-900 to-purple-900"
       } p-2 xs:p-3 sm:p-4 md:p-6 lg:p-8 transition-colors duration-500`}
     >
-      <div className="responsive-container relative">
+      <div className="w-full mx-0 px-0 relative">
         {/* Sun/Moon Animation */}
         <div
-          className="absolute top-0 right-0 w-40 h-40 md:w-64 md:h-64 -mt-12 -mr-12 md:-mt-20 md:-mr-20 z-0 pointer-events-none overflow-visible"
+          className="absolute top-0 right-0 w-20 h-20 xs:w-32 xs:h-32 sm:w-40 sm:h-40 md:w-64 md:h-64 -mt-4 -mr-4 xs:-mt-8 xs:-mr-8 sm:-mt-12 sm:-mr-12 md:-mt-20 md:-mr-20 z-0 pointer-events-none overflow-visible"
           style={{ background: "transparent", border: "none", boxShadow: "none" }}
         >
           {isDaytime() ? <SunAnimation isVisible={true} /> : <MoonAnimation isVisible={true} />}
         </div>
 
         {/* Weather Forecast Title Component */}
-        <div className="flex flex-col items-center justify-center mb-6 relative z-10 max-w-full mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 text-center">Weather Forecast</h1>
-          <p className="text-blue-100 text-center">Check current weather and forecasts for any location</p>
+        <div className="flex flex-col items-center justify-center mb-4 sm:mb-6 relative z-10 max-w-full mx-auto">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 text-center">Weather Forecast</h1>
+          <p className="text-blue-100 text-center text-sm sm:text-base">
+            Check current weather and forecasts for any location
+          </p>
         </div>
 
-        {/* Redesigned Search Form - Matched to Weather Forecast dimensions */}
-        <div className="mb-8 relative z-10 max-w-full mx-auto">
+        {/* Redesigned Search Form - More responsive */}
+        <div className="mb-6 sm:mb-8 relative z-10 w-full mx-auto">
           <form onSubmit={handleSearch} className="relative">
             <div
-              className={`flex items-center bg-white/15 backdrop-blur-lg rounded-full shadow-lg transition-all duration-300 border ${
+              className={`flex items-center ${getBackdropClass("bg-white/15")} rounded-full shadow-lg transition-all duration-300 border ${
                 isSearchFocused ? "border-white/40 ring-4 ring-white/10" : "border-white/20"
               } ${loading ? "opacity-70" : ""}`}
             >
               {/* Search Icon */}
-              <div className="pl-5 pr-2">
+              <div className="pl-4 sm:pl-5 pr-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className={`h-5 w-5 transition-colors duration-300 ${
+                  className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-300 ${
                     isSearchFocused ? "text-white" : "text-white/70"
                   }`}
                   fill="none"
@@ -261,61 +292,58 @@ function App() {
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}
-                placeholder="Search for a city or location..."
-                className="flex-1 py-4 px-2 bg-transparent text-white placeholder-blue-200/70 focus:outline-none focus:placeholder-blue-100 text-base md:text-lg"
+                placeholder="Search for a city..."
+                className="flex-1 py-3 sm:py-4 px-2 bg-transparent text-white placeholder-blue-200/70 focus:outline-none focus:placeholder-blue-100 text-sm sm:text-base md:text-lg"
                 aria-label="Search for a city"
                 disabled={loading}
               />
 
-              {/* Search Button */}
-              <button
+              {/* Small Search Button with Text */}
+              {/* <button
                 type="submit"
-                className={`m-1 py-3 px-6 md:px-8 rounded-full font-medium transition-all duration-300 ${
+                className={`h-8 px-3 sm:h-10 sm:px-4 flex items-center justify-center rounded-full text-xs sm:text-sm transition-all duration-300 mr-1 ${
                   loading ? "bg-blue-600/50 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
-                } text-white shadow-md`}
+                } text-white shadow-md font-medium`}
                 disabled={loading}
               >
                 {loading ? (
-                  <div className="flex items-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Searching
-                  </div>
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
                 ) : (
                   "Search"
                 )}
-              </button>
+              </button> */}
             </div>
           </form>
 
           {/* Unit toggle - Aligned with search bar */}
-          <div className="mt-4 flex justify-end">
+          <div className="mt-3 sm:mt-4 flex justify-center xs:justify-end">
             <button
               onClick={toggleUnit}
-              className="text-white text-sm bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full transition-all duration-300 backdrop-blur-sm flex items-center gap-2 border border-white/10 shadow-md"
+              className={`text-white text-xs sm:text-sm ${getBackdropClass("bg-white/10")} hover:bg-white/20 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-300 flex items-center gap-2 border border-white/10 shadow-md`}
             >
               <span>{unit === "metric" ? "°C" : "°F"}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
+                className="h-3 w-3 sm:h-4 sm:w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -341,7 +369,9 @@ function App() {
 
         {/* Current Weather */}
         {weather && !loading && (
-          <div className="bg-white/20 backdrop-blur-md rounded-xl overflow-hidden shadow-lg mb-6 border border-white/20 relative">
+          <div
+            className={`${getBackdropClass("bg-white/20")} rounded-xl overflow-hidden shadow-lg mb-6 border border-white/20 relative`}
+          >
             <div className="absolute top-4 right-4 z-10">
               <button
                 onClick={addCityToSaved}
@@ -399,32 +429,32 @@ function App() {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/20">
-                <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+                <div className={`${getBackdropClass("bg-white/10")} rounded-lg p-4 text-center`}>
                   <p className="text-blue-100 text-sm">Humidity</p>
                   <p className="text-xl font-semibold text-white">{weather.main.humidity}%</p>
                 </div>
-                <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+                <div className={`${getBackdropClass("bg-white/10")} rounded-lg p-4 text-center`}>
                   <p className="text-blue-100 text-sm">Wind</p>
                   <p className="text-xl font-semibold text-white">
                     {Math.round(weather.wind.speed)} {unit === "metric" ? "m/s" : "mph"}
                   </p>
                 </div>
-                <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+                <div className={`${getBackdropClass("bg-white/10")} rounded-lg p-4 text-center`}>
                   <p className="text-blue-100 text-sm">Pressure</p>
                   <p className="text-xl font-semibold text-white">{weather.main.pressure} hPa</p>
                 </div>
-                <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+                <div className={`${getBackdropClass("bg-white/10")} rounded-lg p-4 text-center`}>
                   <p className="text-blue-100 text-sm">Visibility</p>
                   <p className="text-xl font-semibold text-white">{(weather.visibility / 1000).toFixed(1)} km</p>
                 </div>
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-4">
-                <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+                <div className={`${getBackdropClass("bg-white/10")} rounded-lg p-4 text-center`}>
                   <p className="text-blue-100 text-sm">Sunrise</p>
                   <p className="text-xl font-semibold text-white">{formatTime(weather.sys.sunrise)}</p>
                 </div>
-                <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+                <div className={`${getBackdropClass("bg-white/10")} rounded-lg p-4 text-center`}>
                   <p className="text-blue-100 text-sm">Sunset</p>
                   <p className="text-xl font-semibold text-white">{formatTime(weather.sys.sunset)}</p>
                 </div>
@@ -500,8 +530,6 @@ function App() {
             <h3 className="text-2xl font-bold text-white mb-2">Search for a city to get started</h3>
             <p className="text-blue-100">Enter a city name to see current weather and forecast</p>
           </div>
-
-          
         )}
 
         {/* Footer */}

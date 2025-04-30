@@ -1,4 +1,4 @@
-/* Add these styles at the top of the file to ensure full width */
+/* Cross-browser compatibility styles */
 html,
 body {
   margin: 0;
@@ -6,15 +6,21 @@ body {
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
+  -webkit-text-size-adjust: 100%; /* Prevent font size adjustment on orientation change */
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Custom styles for the weather app */
 body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
     "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased; /* Better font rendering in WebKit browsers */
+  -moz-osx-font-smoothing: grayscale; /* Better font rendering in Firefox */
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar with cross-browser support */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -34,7 +40,23 @@ body {
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* Animation for loading */
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+}
+
+/* Animation for loading with cross-browser support */
+@-webkit-keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 @keyframes pulse {
   0%,
   100% {
@@ -46,31 +68,51 @@ body {
 }
 
 .animate-pulse {
+  -webkit-animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Glass effect */
+/* Glass effect with cross-browser support */
 .glass {
   background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Hover effects */
+/* Safari-specific backdrop filter fallback */
+@supports not (backdrop-filter: blur(10px)) {
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+  }
+}
+
+/* Hover effects with cross-browser support */
 .hover-lift {
+  -webkit-transition: -webkit-transform 0.3s ease, box-shadow 0.3s ease;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .hover-lift:hover {
+  -webkit-transform: translateY(-5px);
   transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
-/* Sun glow effect */
+/* Sun glow effect with cross-browser support */
 .sun-glow {
   box-shadow: 0 0 50px 20px rgba(255, 215, 0, 0.4);
+  -webkit-animation: glow 3s infinite alternate;
   animation: glow 3s infinite alternate;
+}
+
+@-webkit-keyframes glow {
+  from {
+    box-shadow: 0 0 50px 20px rgba(255, 215, 0, 0.4);
+  }
+  to {
+    box-shadow: 0 0 70px 30px rgba(255, 215, 0, 0.6);
+  }
 }
 
 @keyframes glow {
@@ -82,13 +124,20 @@ body {
   }
 }
 
-/* Translucent cards */
+/* Translucent cards with cross-browser support */
 .translucent-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* Safari-specific backdrop filter fallback */
+@supports not (backdrop-filter: blur(10px)) {
+  .translucent-card {
+    background: rgba(255, 255, 255, 0.7);
+  }
 }
 
 /* Remove any max-width constraints from responsive container */
@@ -152,12 +201,20 @@ body {
 img {
   max-width: 100%;
   height: auto;
+  -webkit-user-drag: none; /* Prevent image dragging in Safari */
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
 }
 
 /* Improve canvas responsiveness for animations */
 canvas {
   max-width: 100%;
   height: auto;
+  image-rendering: -webkit-optimize-contrast; /* Better rendering in Chrome/Safari */
+  image-rendering: -moz-crisp-edges; /* Better rendering in Firefox */
+  image-rendering: crisp-edges;
 }
 
 /* Improve scrollbar on mobile */
@@ -172,5 +229,50 @@ canvas {
 @media (max-width: 480px) {
   .translucent-card {
     padding: 0.75rem !important;
+  }
+}
+
+/* Fix for iOS Safari 100vh issue */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    height: -webkit-fill-available;
+  }
+}
+
+/* Fix for Edge and IE flexbox issues */
+@supports (-ms-ime-align: auto) {
+  .flex {
+    display: -ms-flexbox;
+  }
+  .flex-col {
+    -ms-flex-direction: column;
+  }
+  .items-center {
+    -ms-flex-align: center;
+  }
+  .justify-center {
+    -ms-flex-pack: center;
+  }
+}
+
+/* Fix for older browsers that don't support grid */
+@supports not (display: grid) {
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .grid > * {
+    flex: 1 1 100%;
+    margin: 0.5rem;
+  }
+  @media (min-width: 640px) {
+    .grid > * {
+      flex: 1 1 45%;
+    }
+  }
+  @media (min-width: 1024px) {
+    .grid > * {
+      flex: 1 1 30%;
+    }
   }
 }

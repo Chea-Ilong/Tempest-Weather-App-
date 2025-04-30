@@ -11,7 +11,9 @@ const MoonAnimation = ({ isVisible = true }) => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const ctx = canvas.getContext("2d")
+    // Get the context with fallbacks for different browsers
+    const ctx = canvas.getContext("2d", { alpha: true })
+    if (!ctx) return // Bail if context isn't available
 
     const resizeCanvas = () => {
       const parentWidth = canvas.parentElement.offsetWidth
@@ -28,6 +30,7 @@ const MoonAnimation = ({ isVisible = true }) => {
       canvas.style.height = `${size}px`
 
       // Scale the context to match the device pixel ratio
+      ctx.setTransform(1, 0, 0, 1, 0, 0) // Reset transform
       ctx.scale(dpr, dpr)
 
       // Update center coordinates
@@ -77,19 +80,27 @@ const MoonAnimation = ({ isVisible = true }) => {
         rotation += 0.001 // Very slow rotation for subtle movement
 
         // Draw multiple outer glows for ethereal effect with better transparency
-        for (let i = 0; i < 3; i++) {
-          const glowRadius = radius * (1.1 + i * 0.15)
-          const glowOpacity = 0.2 - i * 0.07
+        try {
+          for (let i = 0; i < 3; i++) {
+            const glowRadius = radius * (1.1 + i * 0.15)
+            const glowOpacity = 0.2 - i * 0.07
 
-          const gradient = ctx.createRadialGradient(centerX, centerY, radius * 0.9, centerX, centerY, glowRadius)
+            const gradient = ctx.createRadialGradient(centerX, centerY, radius * 0.9, centerX, centerY, glowRadius)
 
-          gradient.addColorStop(0, `rgba(210, 230, 255, ${glowOpacity + glowIntensity * 0.07})`)
-          gradient.addColorStop(0.5, `rgba(180, 200, 240, ${glowOpacity * 0.5 + glowIntensity * 0.03})`)
-          gradient.addColorStop(1, "rgba(150, 180, 220, 0)")
+            gradient.addColorStop(0, `rgba(210, 230, 255, ${glowOpacity + glowIntensity * 0.07})`)
+            gradient.addColorStop(0.5, `rgba(180, 200, 240, ${glowOpacity * 0.5 + glowIntensity * 0.03})`)
+            gradient.addColorStop(1, "rgba(150, 180, 220, 0)")
 
-          ctx.fillStyle = gradient
+            ctx.fillStyle = gradient
+            ctx.beginPath()
+            ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2)
+            ctx.fill()
+          }
+        } catch (e) {
+          // Fallback for browsers that don't support gradients well
+          ctx.fillStyle = "rgba(210, 230, 255, 0.2)"
           ctx.beginPath()
-          ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2)
+          ctx.arc(centerX, centerY, radius * 1.2, 0, Math.PI * 2)
           ctx.fill()
         }
 
@@ -98,44 +109,55 @@ const MoonAnimation = ({ isVisible = true }) => {
         ctx.translate(centerX, centerY)
         ctx.rotate(rotation)
 
-        const moonGradient = ctx.createRadialGradient(-radius * 0.2, -radius * 0.2, 0, 0, 0, radius)
+        try {
+          const moonGradient = ctx.createRadialGradient(-radius * 0.2, -radius * 0.2, 0, 0, 0, radius)
 
-        // More realistic moon colors
-        moonGradient.addColorStop(0, "rgba(245, 245, 255, 1)")
-        moonGradient.addColorStop(0.5, "rgba(230, 230, 245, 1)")
-        moonGradient.addColorStop(0.8, "rgba(220, 220, 235, 1)")
-        moonGradient.addColorStop(1, "rgba(200, 200, 215, 1)")
+          // More realistic moon colors
+          moonGradient.addColorStop(0, "rgba(245, 245, 255, 1)")
+          moonGradient.addColorStop(0.5, "rgba(230, 230, 245, 1)")
+          moonGradient.addColorStop(0.8, "rgba(220, 220, 235, 1)")
+          moonGradient.addColorStop(1, "rgba(200, 200, 215, 1)")
 
-        ctx.fillStyle = moonGradient
+          ctx.fillStyle = moonGradient
+        } catch (e) {
+          // Fallback for browsers that don't support gradients well
+          ctx.fillStyle = "rgba(230, 230, 245, 1)"
+        }
+
         ctx.beginPath()
         ctx.arc(0, 0, radius, 0, Math.PI * 2)
         ctx.fill()
 
         // Add a subtle overall texture to the moon
-        ctx.globalCompositeOperation = "multiply"
+        try {
+          ctx.globalCompositeOperation = "multiply"
 
-        // Create noise texture
-        const noiseCanvas = document.createElement("canvas")
-        const noiseCtx = noiseCanvas.getContext("2d")
-        noiseCanvas.width = radius * 2
-        noiseCanvas.height = radius * 2
+          // Create noise texture
+          const noiseCanvas = document.createElement("canvas")
+          const noiseCtx = noiseCanvas.getContext("2d")
+          noiseCanvas.width = radius * 2
+          noiseCanvas.height = radius * 2
 
-        const noiseData = noiseCtx.createImageData(radius * 2, radius * 2)
-        for (let i = 0; i < noiseData.data.length; i += 4) {
-          const value = 200 + Math.random() * 55
-          noiseData.data[i] = value
-          noiseData.data[i + 1] = value
-          noiseData.data[i + 2] = value
-          noiseData.data[i + 3] = 30 // Low alpha for subtle effect
+          const noiseData = noiseCtx.createImageData(radius * 2, radius * 2)
+          for (let i = 0; i < noiseData.data.length; i += 4) {
+            const value = 200 + Math.random() * 55
+            noiseData.data[i] = value
+            noiseData.data[i + 1] = value
+            noiseData.data[i + 2] = value
+            noiseData.data[i + 3] = 30 // Low alpha for subtle effect
+          }
+
+          noiseCtx.putImageData(noiseData, 0, 0)
+
+          // Apply noise texture
+          ctx.globalAlpha = 0.15
+          ctx.drawImage(noiseCanvas, -radius, -radius, radius * 2, radius * 2)
+          ctx.globalAlpha = 1
+          ctx.globalCompositeOperation = "source-over"
+        } catch (e) {
+          // Some browsers might not support this advanced texture effect
+          ctx.globalCompositeOperation = "source-over"
         }
-
-        noiseCtx.putImageData(noiseData, 0, 0)
-
-        // Apply noise texture
-        ctx.globalAlpha = 0.15
-        ctx.drawImage(noiseCanvas, -radius, -radius, radius * 2, radius * 2)
-        ctx.globalAlpha = 1
-        ctx.globalCompositeOperation = "source-over"
 
         // Draw enhanced craters with shadows and highlights
         craters.forEach((crater) => {
@@ -144,33 +166,45 @@ const MoonAnimation = ({ isVisible = true }) => {
           const craterSize = crater.size * radius
           const craterDepth = crater.depth
 
-          // Crater shadow (outer ring)
-          const craterRingGradient = ctx.createRadialGradient(craterX, craterY, 0, craterX, craterY, craterSize * 1.1)
+          try {
+            // Crater shadow (outer ring)
+            const craterRingGradient = ctx.createRadialGradient(craterX, craterY, 0, craterX, craterY, craterSize * 1.1)
 
-          craterRingGradient.addColorStop(0, `rgba(180, 180, 195, ${0.1 + (1 - craterDepth) * 0.2})`)
-          craterRingGradient.addColorStop(0.7, `rgba(190, 190, 205, ${0.05 + (1 - craterDepth) * 0.1})`)
-          craterRingGradient.addColorStop(1, "rgba(200, 200, 210, 0)")
+            craterRingGradient.addColorStop(0, `rgba(180, 180, 195, ${0.1 + (1 - craterDepth) * 0.2})`)
+            craterRingGradient.addColorStop(0.7, `rgba(190, 190, 205, ${0.05 + (1 - craterDepth) * 0.1})`)
+            craterRingGradient.addColorStop(1, "rgba(200, 200, 210, 0)")
 
-          ctx.fillStyle = craterRingGradient
+            ctx.fillStyle = craterRingGradient
+          } catch (e) {
+            // Fallback for browsers that don't support gradients well
+            ctx.fillStyle = "rgba(180, 180, 195, 0.2)"
+          }
+
           ctx.beginPath()
           ctx.arc(craterX, craterY, craterSize * 1.1, 0, Math.PI * 2)
           ctx.fill()
 
-          // Crater inner shadow
-          const craterGradient = ctx.createRadialGradient(
-            craterX + craterSize * 0.2,
-            craterY + craterSize * 0.2,
-            0,
-            craterX,
-            craterY,
-            craterSize,
-          )
+          try {
+            // Crater inner shadow
+            const craterGradient = ctx.createRadialGradient(
+              craterX + craterSize * 0.2,
+              craterY + craterSize * 0.2,
+              0,
+              craterX,
+              craterY,
+              craterSize,
+            )
 
-          craterGradient.addColorStop(0, `rgba(160, 160, 175, ${craterDepth})`)
-          craterGradient.addColorStop(0.7, `rgba(180, 180, 195, ${craterDepth * 0.7})`)
-          craterGradient.addColorStop(1, `rgba(200, 200, 210, ${craterDepth * 0.3})`)
+            craterGradient.addColorStop(0, `rgba(160, 160, 175, ${craterDepth})`)
+            craterGradient.addColorStop(0.7, `rgba(180, 180, 195, ${craterDepth * 0.7})`)
+            craterGradient.addColorStop(1, `rgba(200, 200, 210, ${craterDepth * 0.3})`)
 
-          ctx.fillStyle = craterGradient
+            ctx.fillStyle = craterGradient
+          } catch (e) {
+            // Fallback for browsers that don't support gradients well
+            ctx.fillStyle = "rgba(160, 160, 175, 0.7)"
+          }
+
           ctx.beginPath()
           ctx.arc(craterX, craterY, craterSize, 0, Math.PI * 2)
           ctx.fill()
@@ -194,13 +228,19 @@ const MoonAnimation = ({ isVisible = true }) => {
           const mareY = mare.y * radius * 2
           const mareSize = mare.size * radius
 
-          const mareGradient = ctx.createRadialGradient(mareX, mareY, 0, mareX, mareY, mareSize)
+          try {
+            const mareGradient = ctx.createRadialGradient(mareX, mareY, 0, mareX, mareY, mareSize)
 
-          mareGradient.addColorStop(0, `rgba(100, 100, 120, ${mare.opacity})`)
-          mareGradient.addColorStop(0.7, `rgba(120, 120, 140, ${mare.opacity * 0.7})`)
-          mareGradient.addColorStop(1, "rgba(150, 150, 170, 0)")
+            mareGradient.addColorStop(0, `rgba(100, 100, 120, ${mare.opacity})`)
+            mareGradient.addColorStop(0.7, `rgba(120, 120, 140, ${mare.opacity * 0.7})`)
+            mareGradient.addColorStop(1, "rgba(150, 150, 170, 0)")
 
-          ctx.fillStyle = mareGradient
+            ctx.fillStyle = mareGradient
+          } catch (e) {
+            // Fallback for browsers that don't support gradients well
+            ctx.fillStyle = "rgba(100, 100, 120, 0.1)"
+          }
+
           ctx.beginPath()
           ctx.arc(mareX, mareY, mareSize, 0, Math.PI * 2)
           ctx.fill()
@@ -238,19 +278,55 @@ const MoonAnimation = ({ isVisible = true }) => {
         }
         ctx.globalAlpha = 1
 
-        // Animate
-        requestAnimationFrame(draw)
+        // Animate with browser compatibility
+        if (window.requestAnimationFrame) {
+          animationFrameId = window.requestAnimationFrame(draw)
+        } else {
+          // Fallback for older browsers
+          animationFrameId = setTimeout(draw, 1000 / 60)
+        }
       }
 
+      // Start animation
+      let animationFrameId
       draw()
+
+      // Return cleanup function
+      return () => {
+        if (window.cancelAnimationFrame) {
+          window.cancelAnimationFrame(animationFrameId)
+        } else {
+          clearTimeout(animationFrameId)
+        }
+      }
     }
 
-    // Initial resize and event listener
-    resizeCanvas()
-    window.addEventListener("resize", resizeCanvas)
+    // Handle resize events with debounce for performance
+    let resizeTimer
+    const handleResize = () => {
+      clearTimeout(resizeTimer)
+      resizeTimer = setTimeout(resizeCanvas, 100)
+    }
 
+    // Initial setup
+    resizeCanvas()
+
+    // Add event listener with browser compatibility
+    if (window.addEventListener) {
+      window.addEventListener("resize", handleResize)
+    } else if (window.attachEvent) {
+      // For older IE
+      window.attachEvent("onresize", handleResize)
+    }
+
+    // Cleanup
     return () => {
-      window.removeEventListener("resize", resizeCanvas)
+      if (window.removeEventListener) {
+        window.removeEventListener("resize", handleResize)
+      } else if (window.detachEvent) {
+        window.detachEvent("onresize", handleResize)
+      }
+      clearTimeout(resizeTimer)
     }
   }, [isVisible])
 

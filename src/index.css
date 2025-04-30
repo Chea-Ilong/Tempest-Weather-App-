@@ -10,3 +10,21 @@ body,
   margin: 0;
   padding: 0;
 }
+
+/* Fix for IE and Edge */
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  html,
+  body,
+  #root {
+    display: block;
+    height: 100%;
+  }
+}
+
+/* Fix for older Safari */
+@supports (-webkit-overflow-scrolling: touch) {
+  html,
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
