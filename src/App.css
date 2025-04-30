@@ -3,6 +3,9 @@
   :root {
     color-scheme: light dark;
     -webkit-font-smoothing: antialiased;
+    /* Force Safari to use sRGB color space globally */
+    color-profile: sRGB;
+    rendering-intent: auto;
   }
 
   /* Force Safari to use sRGB color space for consistent rendering */
@@ -11,6 +14,8 @@
   .bg-gradient-to-r {
     -webkit-color-interpolation-mode: sRGB;
     color-interpolation-mode: sRGB;
+    /* Add explicit color stops with higher contrast for Safari */
+    --webkit-gradient-color-stop-opacity: 1;
   }
 
   /* Enhance contrast for translucent elements in Safari */
@@ -18,6 +23,24 @@
   .translucent-card {
     --webkit-background-blend-mode: normal;
     background-blend-mode: normal;
+    /* Increase base opacity for better Safari rendering */
+    --base-opacity: 0.3;
+  }
+
+  /* Fix text rendering in Safari */
+  .text-white {
+    color: rgba(255, 255, 255, 1) !important;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .text-blue-100 {
+    color: rgba(219, 234, 254, 1) !important;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Fix gradient opacity in Safari */
+  [class*="bg-opacity-"] {
+    --tw-bg-opacity: max(var(--tw-bg-opacity, 0.2), 0.3);
   }
 }
 

@@ -7,15 +7,19 @@
     color-scheme: light dark;
     -webkit-color-interpolation-mode: sRGB;
     color-interpolation-mode: sRGB;
+    /* Add P3 color space support for modern iOS */
+    color: color(display-p3 1 1 1);
   }
 
   /* Enhance contrast for text elements in Safari */
   .text-white {
-    color: rgba(255, 255, 255, 0.98) !important;
+    color: rgba(255, 255, 255, 1) !important;
+    -webkit-font-smoothing: antialiased;
   }
 
   .text-blue-100 {
-    color: rgba(219, 234, 254, 0.98) !important;
+    color: rgba(219, 234, 254, 1) !important;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* Fix gradient rendering in Safari */
@@ -24,6 +28,16 @@
   .bg-gradient-to-b {
     -webkit-background-clip: padding-box;
     background-clip: padding-box;
+    /* Force higher color contrast */
+    --webkit-gradient-color-stop-opacity: 1;
+    /* Use hardware acceleration */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  /* Fix translucent backgrounds */
+  [class*="bg-white/"] {
+    background-color: rgba(255, 255, 255, var(--tw-bg-opacity, 0.3)) !important;
   }
 }
 

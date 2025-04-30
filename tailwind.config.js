@@ -45,6 +45,20 @@ export const theme = {
         DEFAULT: "hsl(var(--card))",
         foreground: "hsl(var(--card-foreground))",
       },
+      sky: {
+        500: "rgb(14, 165, 233)", // More saturated value
+      },
+      indigo: {
+        800: "rgb(55, 48, 163)", // More saturated value
+        900: "rgb(49, 46, 129)", // More saturated value
+      },
+      purple: {
+        700: "rgb(126, 34, 206)", // More saturated value
+        900: "rgb(88, 28, 135)", // More saturated value
+      },
+      blue: {
+        400: "rgb(96, 165, 250)", // More saturated value
+      },
     },
     fontSize: {
       xs: ["0.75rem", { lineHeight: "1rem" }],
@@ -99,3 +113,21 @@ export const theme = {
 }
 // eslint-disable-next-line no-undef
 export const plugins = [require("tailwindcss-animate")]
+
+export const safelist = [
+  "from-sky-500",
+  "to-indigo-900",
+  "via-blue-400",
+  "from-indigo-800",
+  "to-purple-900",
+  "via-purple-700",
+  "bg-white/10",
+  "bg-white/15",
+  "bg-white/20",
+  "bg-white/30",
+  "bg-white/40",
+  "bg-opacity-20",
+  "bg-opacity-30",
+  "bg-opacity-40",
+  "bg-opacity-80",
+]
